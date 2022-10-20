@@ -110,7 +110,7 @@ function date_now() {
 }
 
 class Constants {
-	public static $seed = '287yhd^@%HD)_+DK?>l;gjrh171tdnb[[aj*625%@%&@';
+	
 }
 
 

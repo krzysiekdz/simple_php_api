@@ -1,6 +1,6 @@
 <?php 
 
-namespace Okdev\Data;
+namespace Okdev\Services;
 
 use Okdev\Utils;
 

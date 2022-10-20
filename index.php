@@ -1,5 +1,3 @@
 <?php 
 
-phpinfo(); exit;
-
-include('framework.php');
+include('app/core/framework.php');

@@ -1,0 +1,17 @@
+#ErrorDocument 404 /err/notfound.html
+
+# Protect hidden files from being viewed
+<Files .* >
+	Order Deny,Allow
+	Deny From All
+</Files>
+
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule docs/test/(.*) docs/test/file.php
+
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule docs/staszek/(.*) docs/staszek/index.html
+
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule .* index.php
+

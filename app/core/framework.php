@@ -4,19 +4,13 @@
 
 namespace Okdev;
 
-//-------------------- include section
+//-------------------- base include section
 
-// include 'utils/functions.php';
-// include 'services/db.php';
+include 'utils/functions.php';
+include 'services/db.php';
+include 'services/router.php';
 // include 'models/core.php';
 // include 'controllers/core.php';
-// include 'utils/routing.php';
-
-// include 'config/data.php';
-
-// use OkDev\Utils;
-// use OkDev\Services;
-// use OkDev\Config;
 
 
 //---------------------- run app section
@@ -36,6 +30,8 @@ class Framework {
 
 	public static $db = null;
 	public static $app = null; //obiekt klasy App, ktory utworzy sie przy inicjalizacji aplikacji
+
+	public static function base() { return $_SERVER['DOCUMENT_ROOT']; }
 
 	public static function main() {
 
@@ -57,6 +53,8 @@ class Framework {
 			self::$db = self::$app->connectDb();
 
 			self::$app->run();
+
+			self::$app->onClose();
 
 			if( self::$db ) { self::$db->close(); }
 		} 

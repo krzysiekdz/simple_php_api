@@ -2,7 +2,7 @@
 
 namespace Okdev\Utils;
 
-use Okdev;
+// use Okdev;
 
 function array_copy($arr, $index=0) {
 	$res = array();
@@ -109,8 +109,8 @@ function date_now() {
 	// return date('Y-m-d H:i:s', strtotime('- 4 minutes') );
 }
 
-class Constants {
+// class Constants {
 	
-}
+// }
 
 

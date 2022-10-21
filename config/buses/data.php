@@ -13,6 +13,6 @@ class Data {
 	);
 
 
-	public static $seed = '287yhd^@%HD)_+DK?>l;gjrh171tdnb[[aj*625%@%&@';
+	public static $seed = '1234';
 }
 

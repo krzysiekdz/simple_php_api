@@ -1,8 +1,7 @@
 <?php 
 
-namespace Okdev\Models;
+namespace Okdev;
 
-use Okdev\Utils;
 
 class BaseModel {
 
@@ -13,6 +12,8 @@ class BaseModel {
 	protected $model = array(
 		'id' => 0
 	);	
+
+	protected $validators = null; //tutaj moze byc tablica funkcji z walidatorami - na potem
 
 	protected $db = null;
 
@@ -30,14 +31,14 @@ class BaseModel {
 	public function removeFromModel($key) { unset( $this->__model[$key] ); }
 
 	public function read_data() {
-		$this->__read_data($this->__model, 'Okdev\Utils\getParam');
+		$this->__read_data();
 	}
 
-	protected function __read_data(&$m, $p) {
+	protected function __read_data() {
 		$mdef = $this->model;
 		foreach( $mdef as $key => $val ) {
-			if( Utils\isParam($key) ) {
-				$m[$key] = $p($key, $val);//$val jest tutaj niepotrzebne, bo i tak nie zostanie zwrocone 
+			if( isParam($key) ) {
+				$this->__model[$key] = getParam($key, $val);//$val jest tutaj niepotrzebne, bo i tak nie zostanie zwrocone; przydalaby sie tutaj walidacja
 			}
 		}
 	}

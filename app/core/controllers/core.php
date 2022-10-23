@@ -1,12 +1,7 @@
 <?php 
 
-namespace Okdev\Controllers;
+namespace Okdev;
 
-include_once $_SERVER['DOCUMENT_ROOT'].'/models/session.php';
-
-use Okdev;
-use Okdev\Utils;
-use Okdev\Models;
 
 class BaseController {
 	protected $route = null;
@@ -33,11 +28,12 @@ class BaseController {
 
 
 	//każdy kontroler wykonuje ten kod - rozpoznanie routingu i wywołanie odpowiedniej akcji
-	public  function __construct($r, $i, $url) {
-		$this->db = Okdev\Framework::$db;
+	public  function __construct($r, $i) {
+		
+		$this->route = array_copy($r, $i);
+	}
 
-		$this->route = Utils\array_copy($r, $i);
-
+	public function run() {
 		if( count($this->route) > 0 ) {
 			$r0 =  explode('?', $this->route[0]);
 			$r0 = $r0[0];
@@ -46,25 +42,31 @@ class BaseController {
 				$this->{$action}();
 			}
 			else {
-				$this->result = Utils\route_not_found($url);		
+				$this->result = route_not_found(' todo ');		
 			}
 		}
 		else {
-			$this->result = Utils\route_not_found($url);		
+			$this->result = route_not_found(' todo ');		
 		}
 
-		$debug = Utils\getParam('debug');
+		$debug = getParam('debug');
 		if( $debug == '999' ) {
 			$this->result['__db_queries__'] = $this->db->log;
 		}
 
-		Utils\ret_json( $this->result );
+		ret_json( $this->result );
 	}
 
+	public function setDb($db = null) {
+		if(!$db) {
+			$this->db = Okdev\Framework::$db;	
+		}
+		
+	}
 
 	protected function checkSession() {
-		$token = Utils\getParam('token');
-		$this->session = new Models\Session( $this->db );
+		$token = getParam('token');
+		$this->session = new Session( $this->db );
 		
 		$res = $this->session->checkSession( $token );
 		$this->setResult( $res, $res['code'] );
@@ -73,7 +75,7 @@ class BaseController {
 	}
 
 	protected function resultErr($msg = '', $code = -1 ) {
-		$this->result = Utils\ret_err( $msg, $code );	
+		$this->result = ret_err( $msg, $code );	
 	}
 
 	protected function setResult($data, $code = 1 ) {
@@ -90,12 +92,12 @@ class BaseController {
 
 
 	protected function parseListParams() {
-		$this->start = Utils\getParamInt('start');
-		$this->limit = Utils\getParamInt('limit', $this->def_limit);
+		$this->start = getParamInt('start');
+		$this->limit = getParamInt('limit', $this->def_limit);
 		
 
-		$this->start = Utils\assert_int_pos( $this->start );
-		$this->limit = Utils\assert_int_max( $this->limit, 1, $this->max_limit );
+		$this->start = assert_int_pos( $this->start );
+		$this->limit = assert_int_max( $this->limit, 1, $this->max_limit );
 	}
 
 	/*
@@ -103,10 +105,10 @@ class BaseController {
 	*/
 
 	protected function action_list() {
-		if( $this->prevent_default_list ) return Utils\ret_err( 'Forbidden!', -400 );
+		if( $this->prevent_default_list ) return ret_err( 'Forbidden!', -400 );
 		$this->parseListParams();
 		$res = $this->db->list_data(  $this->table_name , $this->start , $this->limit );
-		Utils\ret_json( $res );
+		ret_json( $res );
 	}
 
 
@@ -115,20 +117,20 @@ class BaseController {
 	*/
 
 	protected function action_get() {
-		if( $this->prevent_default_get ) return Utils\ret_err( 'Forbidden!', -400 );
-		$id = Utils\getParam( 'id', 0 );
+		if( $this->prevent_default_get ) return ret_err( 'Forbidden!', -400 );
+		$id = getParam( 'id', 0 );
 		if( $id > 0 ) {
 			$res = $this->db->get_by_id(  $this->table_name , $id );
 			if($res['code'] > 0) {
-				Utils\ret_json( $res );	
+				ret_json( $res );	
 			}
 			else {
-				Utils\ret_not_found( 'Not found!' );		
+				ret_not_found( 'Not found!' );		
 			}
 			
 		}
 		else {
-			Utils\ret_not_found( 'Wrong id parameter!' );	
+			ret_not_found( 'Wrong id parameter!' );	
 		}
 	}
 
@@ -140,7 +142,7 @@ class BaseController {
 
 
 	protected function action_add() {
-		if( $this->prevent_default_add ) return Utils\ret_err( 'Forbidden!', -400 );
+		if( $this->prevent_default_add ) return ret_err( 'Forbidden!', -400 );
 		$this->__add_init();
 		$this->__add_finalize();
 	}
@@ -161,7 +163,7 @@ class BaseController {
 			$r = $this->db->get_by_id( $this->table_name, $res['id'] );
 			if($r['code'] > 0) $res['row'] = $r['row'];
 		}
-		Utils\ret_json($res);
+		ret_json($res);
 	}
 
 
@@ -172,7 +174,7 @@ class BaseController {
 
 
 	protected function action_edit() {
-		if( $this->prevent_default_edit ) return Utils\ret_err( 'Forbidden!', -400 );
+		if( $this->prevent_default_edit ) return ret_err( 'Forbidden!', -400 );
 		$this->__edit_init();
 		$this->__edit_finalize();
 	}
@@ -188,7 +190,7 @@ class BaseController {
 	protected function __edit_finalize() {
 		$m = $this->model->getModel(); 
 		if(!isset($m['id'])  || $m['id'] <= 0) {
-			Utils\ret_not_found('Missing id parameter!');
+			ret_not_found('Missing id parameter!');
 			return;
 		}
 
@@ -197,10 +199,10 @@ class BaseController {
 			$r = $this->db->get_by_id( $this->table_name, $res['id'] );
 			if($r['code'] > 0) $res['row'] = $r['row'];
 
-			Utils\ret_json($res);
+			ret_json($res);
 		}
 		else {
-			Utils\ret_not_found('Not found item!');
+			ret_not_found('Not found item!');
 		}
 		
 	}

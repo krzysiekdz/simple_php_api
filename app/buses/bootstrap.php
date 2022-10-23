@@ -2,10 +2,10 @@
 
 namespace Okdev;
 
+//--------- specyficzne includy dla projektu
 include Framework::base().'/config/buses/data.php';
 include 'routing.php';
 
-//--------- tutaj specyficzne includy dla projektu
 
 
 //buses
@@ -13,8 +13,9 @@ class App {
 	public function connectDb() : Services\Db { return new Services\Db( Config\Data::$local_db ); } 
 
 	public function run() {
-		// Utils\Routing::route( $_SERVER['REQUEST_URI'] );
-		echo 'buses run';
+		$router = new BusesRouter();
+		$controller = $router->detect( $_SERVER['REQUEST_URI'], 1 );
+		$controller->run();
 	}
 
 	public function onClose() {} 

@@ -1,9 +1,6 @@
 <?php 
 
-namespace Okdev\Services;
-
-use Okdev\Utils;
-
+namespace Okdev;
 
 /*
  ALTER TABLE `okdevhmc_okdb`.`t_todos`  MODIFY `text` VARCHAR(150) CHARACTER SET utf8 COLLATE utf8_polish_ci;
@@ -134,8 +131,8 @@ class DB {
 			$keys .= $key . ',';
 			$vals .= '\''. $val . '\',';
 		}
-		$keys = Utils\remove_last($keys) . ')';
-		$vals = Utils\remove_last($vals) . ')';
+		$keys = remove_last($keys) . ')';
+		$vals = remove_last($vals) . ')';
 
 		$sql .= $keys . $vals;
 
@@ -176,7 +173,7 @@ class DB {
 			$sql .= " $key = '$val',";
 		}
 		
-		$sql = Utils\remove_last($sql) . $sql_where;
+		$sql = remove_last($sql) . $sql_where;
 
 		$this->log[] = $sql; //dodanie zapytania do 'logu'
 

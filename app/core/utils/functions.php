@@ -104,7 +104,8 @@ function create_token($iduser) {
 }
 
 function date_now() {
-	return date('Y-m-d H:i:s', time() - ( 4*60 + 30 ) );
+	return date('Y-m-d H:i:s');
+	// return date('Y-m-d H:i:s', time() - ( 4*60 + 30 ) );
 	// return date('Y-m-d H:i:s', strtotime('- 4 minutes') );
 }
 

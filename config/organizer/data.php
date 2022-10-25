@@ -1,8 +1,8 @@
 <?php 
 
-namespace Okdev\Config;
+namespace Okdev\Org;
 
-class Data {
+class Config {
 
 	public static $local_db = array(
 		'host' => 'localhost',
@@ -12,7 +12,7 @@ class Data {
 		'port' => 3306
 	);
 
-	public static $seed = '287yhd^@%HD)_+DK?>l;gjrh171tdnb[[aj*625%@%&@';
+	public static $seed = '1234';
 
 }
 

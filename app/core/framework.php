@@ -11,6 +11,7 @@ include 'services/router.php';
 
 include 'models/core.php';
 include 'models/session.php';
+include 'models/user.php';
 
 // include 'controllers/core.php';
     
@@ -21,6 +22,11 @@ class Framework {
 	public static $app = null; //obiekt klasy App, ktory utworzy sie przy inicjalizacji aplikacji
 
 	public static function base() { return $_SERVER['DOCUMENT_ROOT']; }
+
+	public static function init() {
+		session_start();
+		date_default_timezone_set('Europe/Warsaw');
+	}
 
 	public static function main() {
 
@@ -33,25 +39,22 @@ class Framework {
 			//document root to np: /home/okdevhmc/domains/okdev.hmcloud.pl/private_html
 			$bootstrap = $_SERVER['DOCUMENT_ROOT'] .'/app/' . $base . '/bootstrap.php';
 
-			$s = new Session();
-			
-			
-			// if( file_exists( $bootstrap ) ) {
-			// 	include( $bootstrap ); //ładowanie konkretnej aplikacji oraz jej klasy wejściowej: App
-			// }
-			// else {
-			// 	throw new \Exception("Project \"$base\" not configured: bootstrap.php is missing.");
-			// }
+			if( file_exists( $bootstrap ) ) {
+				include( $bootstrap ); //ładowanie konkretnej aplikacji oraz jej klasy wejściowej: App
+			}
+			else {
+				throw new \Exception("Project \"$base\" not configured: bootstrap.php is missing.");
+			}
 
-			// self::$app = new App();
+			self::$app = new App();
 
-			// self::$db = self::$app->connectDb();
+			self::$db = self::$app->connectDb();
 
-			// self::$app->run();
+			self::$app->run();
 
-			// self::$app->onClose();
+			self::$app->onClose();
 
-			// if( self::$db ) { self::$db->close(); }
+			if( self::$db ) { self::$db->close(); }
 		} 
 		catch (\Exception $e) {
 			print_r($e->getMessage());
@@ -66,10 +69,7 @@ class Framework {
 	}
 
 
-	public static function init() {
-		session_start();
-		date_default_timezone_set('Europe/Warsaw');
-	}
+	
 
 
 }

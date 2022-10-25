@@ -1,8 +1,8 @@
 <?php 
 
-namespace Okdev\Config;
+namespace Okdev\Buses;
 
-class Data {
+class Config {
 
 	public static $local_db = array(
 		'host' => 'localhost',

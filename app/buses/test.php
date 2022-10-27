@@ -10,7 +10,7 @@ class BusTest {
 	public static function runAll($db) {
 		$t = new BusTest($db);
 
-		$t->test_session();
+		// $t->test_session();
 		$t->test_users();
 	}
 
@@ -39,15 +39,81 @@ class BusTest {
 		echo '<br>';
 	}
 
+	//zaczac od zrobienia list(), potem kontroler account
 	public function test_users() {
 		echo '<h3>USERS</h3>';
 		
-		$u = new User( $this->db );
-		$id = $u->createUser(  $_GET );
-		echo 'USER CREATED, ID = ' . $id;
+		echo 'USER CREATION:';
+		echo '<br>';
+		$d=[ 'email'=>'abc@b.pl', 'user_name'=>'abc', 'password'=>'1234' ];
+		$u = create(new User( $this->db ))->setModel( $d );
+		echo 'before create: ';
+		echo '<br>';
+		print_r( $u->getModel() );
+		$vr = $u->create();
+		echo '<br>';
+		echo 'after create: ';
+		echo '<br>';
+		print_r($vr);
 		echo '<br>';
 		print_r( $u->getModel() );
 		echo '<br>';
+		echo '<br>';
+
+
+		$d2=[ 'email'=>'abc2@b.pl', 'user_name'=>'abc', 'password'=>'1234' ];
+		$u2 = create(new User( $this->db ))->setModel( $d2 );
+		$vr = $u2->create();
+		echo 'USER CREATION WITH THE SAME USER_NAME:';
+		echo '<br>';
+		print_r($vr);
+		echo '<br>';
+		print_r( $u2->getModel() );
+		echo '<br>';
+		echo '<br>';
+
+		$u3 = create(new User( $this->db ))->getUser( 'abc@b.pl', '1234' );
+		echo 'USER GET WITH EMAIL AND PASSWORD:';
+		echo '<br>';
+		print_r( $u3->getModel() );
+		echo '<br>';
+		echo '<br>';
+
+		$u3->getUser( 'abc@b.pl', '12345' );
+		echo 'USER GET WITH WRONG PASSWORD:';
+		echo '<br>';
+		print_r( $u3->getModel() );
+		echo '<br>';
+		echo '<br>';
+
+		$u4 = create(new User( $this->db ))->get( $u->id );
+		echo 'USER GET WITH ID:';
+		echo '<br>';
+		print_r( $u4->getModel() );
+		echo '<br>';
+		echo '<br>';
+
+
+		$u5 = create(new User( $this->db ))->updateModel( ['id'=>$u4->id,  'email'=> 'abc2@b.pl','user_name'=>'abcd', 'password'=>'12345', ] );
+		echo 'USER UPDATE:';
+		echo '<br>before update:<br>';
+		print_r( $u5->getModel() );
+		echo '<br>';
+		$vr = $u5->update();
+		print_r($vr);
+		echo '<br>after update:<br>';
+		$u6 = create(new User($this->db))->get( $u5->id );
+		print_r( $u6->getModel() );
+		echo '<br>';
+		echo '<br>';
+
+		echo 'USER REMOVE:';
+		echo '<br>';
+		$u->remove();
+		print_r( $u->getModel() );
+		echo '<br>';
+		echo '<br>';
+
 	}
 
 }

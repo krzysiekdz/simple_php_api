@@ -2,6 +2,9 @@
 
 namespace Okdev;
 
+function create($x) {
+	return $x;
+}
 
 function array_copy($arr, $index=0) {
 	$res = array();
@@ -88,10 +91,6 @@ function isParam($name) {
 
 function validateEmail($email) {
 	return preg_match('/^[\w_\.]+@[\w]+\.[a-zA-Z]+$/', $email);
-}
-
-function validatePass($s) {
-	return preg_match('/^.{4,}$/', $s);
 }
 
 function encode_pass($s) {

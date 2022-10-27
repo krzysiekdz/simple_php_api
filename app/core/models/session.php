@@ -34,7 +34,7 @@ class Session extends BaseModel {
 		$s['date_start'] = date_now();
 		$s['date_last'] = date_now();
 
-		$r = $this->query_insert( $s );
+		$r = $this->queryInsert( $s );
 		if( $r['code'] > 0 ) {
 			$s['id'] = $r['id'];
 			$this->setModel( $s );
@@ -54,9 +54,9 @@ class Session extends BaseModel {
 
 		if( $this->session_timeout > (time() - strtotime( $r['date_last'] )) )  { //sesja ważna
 			$s = array( 'date_last' => date_now(), 'id' => $r['id'] );
-			$this->query_update( $s );
+			$this->queryUpdate( $s );
 
-			$s = $this->query_row(" SELECT * FROM :tname WHERE token = '$token' ");
+			$s = $this->queryRow(" SELECT * FROM :tname WHERE token = '$token' ");
 			$this->setModel( $s );
 
 			return array( 'code'=>1 );

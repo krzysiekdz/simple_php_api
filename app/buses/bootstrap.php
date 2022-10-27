@@ -19,6 +19,9 @@ class App {
 	} 
 
 	public function run() {
+		User::$adminKey = Buses\Config::$adminKey;
+		Constants::$seed = Buses\Config::$seed;
+
 		BusTest::runAll( $this->db );
 		// $router = new BusesRouter();
 		// $controller = $router->detect( $_SERVER['REQUEST_URI'], 1 );

@@ -35,7 +35,7 @@ class User extends BaseModel {
 		}
 
 		if( $create || isset( $m['t_type'] ) ) {
-			if( getParam('adminKey') != User::$adminKey ) $m['t_type'] = 0;//nie pozwalamy ustawic typu, chyba że to przekazno specjalny kod	
+			if( getParam('adminKey') != User::$adminKey ) $m['t_type'] = 0;//nie pozwalamy ustawic typu, chyba że przekazno specjalny kod	
 		}
 
 		return new ValidateResult(1, '');
@@ -81,6 +81,16 @@ class User extends BaseModel {
 
 	protected function afterGet( &$m ) {
 		unset( $m['password'] );
+	}
+
+	protected function afterListItem( &$m ) {
+		$this->afterGet( $m );
+	}
+
+	public static function getIterator($db) : User {
+		$u = new User( $db );
+		$u->select('u.id, u.user_name, s.id as sid')->fromAlias('u')->leftJoin('LEFT JOIN t_sessions s ON s.id_user = u.id')->where('1')->orderBy('id DESC')->itemClass( User::class );
+		return $u;
 	}
 
 }

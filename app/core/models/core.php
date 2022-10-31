@@ -47,6 +47,11 @@ class BaseModel {
 		return $this;
 	}
 
+	public function setRawModel($m) { 
+		$this->__model = $m; 
+		return $this;
+	}
+
 	public function resetModel() { $this->__model = []; }
 
 	/*
@@ -84,12 +89,7 @@ class BaseModel {
 		return $this->db->insert_data( $this->table_name , $d );
 	}
 
-	//walidacja, a takze specyficzne operacje np dodawanie lub usuwanie pewnych pól oraz logika dodatkowa
-	protected function validate(array &$m, bool $create) : ValidateResult {  return new ValidateResult(1, ''); } 
-
-	protected function afterCreateUpdate(array &$m, bool $create) {} //wykona się, jeśli validate bedzie pomyślne
-
-
+	
 	/*
 		create
 	*/
@@ -110,6 +110,11 @@ class BaseModel {
 		
 		return $vr;
 	}
+
+	//walidacja, a takze specyficzne operacje np dodawanie lub usuwanie pewnych pól oraz logika dodatkowa
+	protected function validate(array &$m, bool $create) : ValidateResult {  return new ValidateResult(1, ''); } 
+
+	protected function afterCreateUpdate(array &$m, bool $create) {} //wykona się, jeśli validate bedzie pomyślne
 
 	/*
 		update
@@ -135,8 +140,6 @@ class BaseModel {
 		get
 	*/
 
-	protected function afterGet( &$m ) {}
-
 	public function get($id) {
 		$this->p[':id'] = $id;
 		$r = $this->queryRow('SELECT * FROM :tname WHERE id = :id');
@@ -149,11 +152,108 @@ class BaseModel {
 		return $this;
 	}
 
+	protected function afterGet( &$m ) {}
+
 	/*
 		list
 	*/
 
-	public function list() : array{}
+	protected $listConfig = [ 
+		'select' => '*',
+		'fromAlias' => '',
+		'leftJoin' => '',
+		'where' => '1',
+		'orderby' => 'id DESC',
+		'itemClass' => BaseModel::class,
+	];
+
+	protected function afterListItem( &$i ) {}
+
+	public function list(array $p=[]) : array {
+		$s = $p['start'] ?? 0;
+		if( $s < 0 ) $s = 0;
+		
+		$l = $p['limit'] ?? 10;
+		if( $l > 100 ) $l = 100;
+		else if ( $l <= 0 ) $l = 10;
+
+		$w = $this->listConfig['where'];
+		if( strlen( trim($w) ) > 0 ) $w = 'WHERE ' . $w;
+
+		$ord = $this->listConfig['orderby'];
+		if( strlen( trim($ord) ) > 0 ) $ord = 'ORDER BY ' . $ord;
+
+		$this->p[':select'] = 'SELECT ' . $this->listConfig['select'];
+		$this->p[':leftJoin'] = $this->listConfig['leftJoin'];
+		$this->p[':fromAlias'] = $this->listConfig['fromAlias'];
+		$this->p[':start'] = $s;
+		$this->p[':limit'] = $l;
+		$this->p[':where'] = $w;		 
+		$this->p[':orderby'] = $ord;		 
+
+		$q = $this->query(':select FROM :tname :fromAlias :leftJoin :where :orderby LIMIT :start, :limit');
+		$res = [];
+
+		$itemClass = $this->listConfig['itemClass'];
+		if( $q['size'] > 0 ) {
+			foreach( $q['rows'] as $row ) {
+				$this->afterListItem( $row ) ;
+				$item = new $itemClass( $this->db );
+				$item->setRawModel( $row );
+				$res[] = $item;
+			}
+		}
+
+		return $res;
+	}
+
+	public function select($s) {
+		$this->listConfig['select'] = $s;
+		return $this;
+	}
+
+	public function fromAlias($f) {
+		$this->listConfig['fromAlias'] = $f;
+		return $this;
+	}
+
+	public function leftJoin($l) {
+		$this->listConfig['leftJoin'] = $l;
+		return $this;
+	}
+
+	public function where($w) {
+		$this->listConfig['where'] = $w;
+		return $this;
+	}
+
+	public function orderby($o) {
+		$this->listConfig['orderby'] = $o;
+		return $this;
+	}
+
+	public function itemClass($ic) {
+		$this->listConfig['itemClass'] = $ic;
+		return $this;
+	}
+
+	public static function getIterator($db) : BaseModel { return null; }
+
+	public function printItemsHtml(array $items) {
+		echo '<br>';
+		foreach( $items as $it ) {
+			echo '<br>';
+			print_r( $it->getModel() );
+		}
+	}
+
+	public function getModels( $items ) {
+		$r = [];
+		foreach( $items as $item ) {
+			$r[] = $item->getModel();
+		}
+		return $r;
+	}
 
 	/*
 		remove

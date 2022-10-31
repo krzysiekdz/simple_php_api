@@ -4,111 +4,144 @@ namespace Okdev;
 
 
 class BaseController {
-	protected $route = null;
+
+	protected $base = ''; //adres bazowy kontrolera, np account w adresie : account/login
+	protected $route = null;//część adresu url która aktywuje akcję kontrolera, np login w adresie: account/login
 	protected $db = null;
 	protected $model = null;
-	protected $table_name = '';
-
-	//konfiguracja dla list
-	protected $def_limit = 10;
-	protected $max_limit = 100;
-	protected $start = 0;
-	protected $limit = 0;
-
-	protected $prevent_default_list = true;
-	protected $prevent_default_get = true;
-	protected $prevent_default_add = true;
-	protected $prevent_default_edit = true;
-
 	protected $session = null;
-	
-	protected $result = array();
+	protected $result = array();//tablica wartosci zwracana z api - jeśli api restowe 
+
+	protected $def_list = true;
+	protected $def_get = true;
+	protected $def_create = true;
+	protected $def_update = true;
+	protected $def_remove = true;
 	
 	protected function createModel() { return null; }
 
+	protected function createIterator() { return null; }
 
-	//każdy kontroler wykonuje ten kod - rozpoznanie routingu i wywołanie odpowiedniej akcji
-	public  function __construct($r, $i) {
-		
-		$this->route = array_copy($r, $i);
-	}
+	public  function __construct($base) { $this->base = $base; }
 
 	public function run() {
 		if( count($this->route) > 0 ) {
-			$r0 =  explode('?', $this->route[0]);
-			$r0 = $r0[0];
-			$action = 'action_' . $r0; //można wywołac tylko metody action_... - inne są ukryte
+			$r =  explode('?', $this->route[0]);
+			$r = $r[0];
+			$action = 'action_' . $r; //można wywołac tylko metody action_... - inne są ukryte
 			if ( method_exists( $this, $action ) ) {
 				$this->{$action}();
 			}
 			else {
-				$this->result = route_not_found(' todo ');		
+				$this->notFound();		
 			}
 		}
 		else {
-			$this->result = route_not_found(' todo ');		
+			$this->action_index();
 		}
 
 		$debug = getParam('debug');
 		if( $debug == '999' ) {
-			$this->result['__db_queries__'] = $this->db->log;
+			$this->result['__db_queries'] = $this->db->log;
 		}
+	}
 
-		ret_json( $this->result );
+	public function setRoute($url, $i) {
+		$this->route = [];
+
+		$r = explode('/', $url);
+		if( count($r) == 0 ) {
+			$this->route[] = '';
+			return ; 
+		}
+		if( $r[0] == '' ) array_shift($r);
+		
+		$this->route = array_copy( $r, $i );
+	}
+
+	public function setRouteArr($r, $i) {
+		$this->route = array_copy( $r, $i );
 	}
 
 	public function setDb($db = null) {
 		if(!$db) {
-			$this->db = Okdev\Framework::$db;	
+			$this->db = Framework::$db;	
 		}
-		
 	}
 
-	protected function checkSession() {
-		$token = getParam('token');
-		$this->session = new Session( $this->db );
-		
-		$res = $this->session->checkSession( $token );
-		$this->setResult( $res, $res['code'] );
+	public function callController($c) {
+		$c->setDb();
+		//przekazujemy kolejny route, np jesli jestesmy na : home/news/list to route=news/list a przekazujemy : list
+		$c->setRouteArr( $this->route, 1 ); 
+		$c->run();
+		$this->result = $c->result;
+	}
 
-		return $res['code'] > 0;
+	public function resultJson() {
+		ret_json( $this->result );
+	}
+
+	protected function action_index() {
+		$this->result = [ 'code' => 1, 'msg' => 'index' ];
+	}
+
+	protected function notFound($msg = '', $code = -404) {
+		if($msg == '') $msg = 'Nie znaleziono zasobu';
+		$this->result =  array( 'code'=> $code, 'msg'=>$msg );
+	}
+
+	protected function routeNotFound($r) {
+		$msg = 'Nie znaleziono routingu dla: ' . $r ;
+		$this->result = array( 'code'=>-404, 'msg'=>$msg ) ;
 	}
 
 	protected function resultErr($msg = '', $code = -1 ) {
-		$this->result = ret_err( $msg, $code );	
+		if($msg == '') $msg = 'Wystąpił błąd';
+		$this->result =  array( 'code'=> $code, 'msg'=>$msg ) ;
 	}
 
-	protected function setResult($data, $code = 1 ) {
+	protected function setResult($data, $code = 0) {
 		foreach($data as $k=>$v) {
 			$this->result[$k] = $v;	
 		}
-		$this->result['code'] = $code;
+		if( $code ) {
+			$this->result['code'] = $code;
+		}
 	}
 
 	protected function resultCode($code) {
 		$this->result['code'] = $code;
 	}
 
-
-
-	protected function parseListParams() {
-		$this->start = getParamInt('start');
-		$this->limit = getParamInt('limit', $this->def_limit);
+	// protected function checkSession() {
+	// 	$token = getParam('token');
+	// 	$this->session = new Session( $this->db );
 		
+	// 	$res = $this->session->checkSession( $token );
+	// 	$this->setResult( $res, $res['code'] );
 
-		$this->start = assert_int_pos( $this->start );
-		$this->limit = assert_int_max( $this->limit, 1, $this->max_limit );
-	}
+	// 	return $res['code'] > 0;
+	// }
+	
 
 	/*
 	* action_list
 	*/
 
+	//dodac mozliwosc okreslenia dostepu: dla zalogowanych badz dla wszytkich
 	protected function action_list() {
-		if( $this->prevent_default_list ) return ret_err( 'Forbidden!', -400 );
-		$this->parseListParams();
-		$res = $this->db->list_data(  $this->table_name , $this->start , $this->limit );
-		ret_json( $res );
+		if( !$this->def_list ) return $this->notFound();
+
+		$start = getParamInt('start');
+		$limit = getParamInt('limit');
+
+		$iter = $this->createIterator();
+		if( !$iter ) return $this->notFound('list - no iterator');
+
+		$items = $iter->list( ['start' => $start, 'limit' => $limit] );
+
+		$this->result['rows'] = $iter->getModels( $items );
+		$this->resultCode(1);
 	}
 
 
@@ -117,21 +150,24 @@ class BaseController {
 	*/
 
 	protected function action_get() {
-		if( $this->prevent_default_get ) return ret_err( 'Forbidden!', -400 );
-		$id = getParam( 'id', 0 );
-		if( $id > 0 ) {
-			$res = $this->db->get_by_id(  $this->table_name , $id );
-			if($res['code'] > 0) {
-				ret_json( $res );	
-			}
-			else {
-				ret_not_found( 'Not found!' );		
-			}
-			
+
+		if( !$this->def_get ) return $this->notFound();
+
+		$id = getParamInt('id');
+
+		$model = $this->createModel();
+		if( !$model ) return $this->notFound('get - no model');
+
+		$model->get( $id );
+
+		if( $model->id ) {
+			$this->result['row'] = $model->getModel();
+			$this->resultCode(1);	
 		}
 		else {
-			ret_not_found( 'Wrong id parameter!' );	
+			$this->notFound('Not found record: ' . $id)	;
 		}
+		
 	}
 
 
@@ -141,30 +177,30 @@ class BaseController {
 	*/
 
 
-	protected function action_add() {
-		if( $this->prevent_default_add ) return ret_err( 'Forbidden!', -400 );
-		$this->__add_init();
-		$this->__add_finalize();
-	}
+	// protected function action_add() {
+	// 	if( $this->prevent_default_add ) return ret_err( 'Forbidden!', -400 );
+	// 	$this->__add_init();
+	// 	$this->__add_finalize();
+	// }
 
-	protected function __add_init() {
-		$this->model = $this->createModel();
-		if( $this->model == null ) return;
-		$m = $this->model;
+	// protected function __add_init() {
+	// 	$this->model = $this->createModel();
+	// 	if( $this->model == null ) return;
+	// 	$m = $this->model;
 
-		$m->init_defaults();
-		$m->read_data();
-		$m->removeFromModel('id');
-	}
+	// 	$m->init_defaults();
+	// 	$m->read_data();
+	// 	$m->removeFromModel('id');
+	// }
 
-	protected function __add_finalize() {
-		$res = $this->db->insert_data( $this->table_name, $this->model->getModel());
-		if($res['code'] > 0) {
-			$r = $this->db->get_by_id( $this->table_name, $res['id'] );
-			if($r['code'] > 0) $res['row'] = $r['row'];
-		}
-		ret_json($res);
-	}
+	// protected function __add_finalize() {
+	// 	$res = $this->db->insert_data( $this->table_name, $this->model->getModel());
+	// 	if($res['code'] > 0) {
+	// 		$r = $this->db->get_by_id( $this->table_name, $res['id'] );
+	// 		if($r['code'] > 0) $res['row'] = $r['row'];
+	// 	}
+	// 	ret_json($res);
+	// }
 
 
 
@@ -173,39 +209,39 @@ class BaseController {
 	*/
 
 
-	protected function action_edit() {
-		if( $this->prevent_default_edit ) return ret_err( 'Forbidden!', -400 );
-		$this->__edit_init();
-		$this->__edit_finalize();
-	}
+	// protected function action_edit() {
+	// 	if( $this->prevent_default_edit ) return ret_err( 'Forbidden!', -400 );
+	// 	$this->__edit_init();
+	// 	$this->__edit_finalize();
+	// }
 
-	protected function __edit_init() {
-		$this->model = $this->createModel();
-		if( $this->model == null ) return;
-		$m = $this->model;
+	// protected function __edit_init() {
+	// 	$this->model = $this->createModel();
+	// 	if( $this->model == null ) return;
+	// 	$m = $this->model;
 
-		$m->read_data();
-	}
+	// 	$m->read_data();
+	// }
 
-	protected function __edit_finalize() {
-		$m = $this->model->getModel(); 
-		if(!isset($m['id'])  || $m['id'] <= 0) {
-			ret_not_found('Missing id parameter!');
-			return;
-		}
+	// protected function __edit_finalize() {
+	// 	$m = $this->model->getModel(); 
+	// 	if(!isset($m['id'])  || $m['id'] <= 0) {
+	// 		ret_not_found('Missing id parameter!');
+	// 		return;
+	// 	}
 
-		$res = $this->db->update_data( $this->table_name, $this->model->getModel());
-		if($res['code'] > 0) {
-			$r = $this->db->get_by_id( $this->table_name, $res['id'] );
-			if($r['code'] > 0) $res['row'] = $r['row'];
+	// 	$res = $this->db->update_data( $this->table_name, $this->model->getModel());
+	// 	if($res['code'] > 0) {
+	// 		$r = $this->db->get_by_id( $this->table_name, $res['id'] );
+	// 		if($r['code'] > 0) $res['row'] = $r['row'];
 
-			ret_json($res);
-		}
-		else {
-			ret_not_found('Not found item!');
-		}
+	// 		ret_json($res);
+	// 	}
+	// 	else {
+	// 		ret_not_found('Not found item!');
+	// 	}
 		
-	}
+	// }
 
 
 }

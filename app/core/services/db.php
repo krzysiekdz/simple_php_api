@@ -192,4 +192,16 @@ class DB {
 		return $res;
 	}
 
+
+	public function getLogs() {
+		return $this->log;
+	}
+
+	public function printLogsHtml() {
+		echo '<br>';
+		foreach( $this->log as $log ) {
+			echo $log . '<br>';
+		}
+	}
+
 }

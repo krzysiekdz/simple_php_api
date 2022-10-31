@@ -14,5 +14,7 @@ class Config {
 
 
 	public static $seed = '1234';
+
+	public static $adminKey = '1234';
 }
 

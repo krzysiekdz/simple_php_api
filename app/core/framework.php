@@ -13,7 +13,8 @@ include 'models/core.php';
 include 'models/session.php';
 include 'models/user.php';
 
-// include 'controllers/core.php';
+include 'controllers/core.php';
+include 'controllers/account.php';
     
 
 class Framework {
@@ -57,7 +58,7 @@ class Framework {
 			if( self::$db ) { self::$db->close(); }
 		} 
 		catch (\Exception $e) {
-			print_r($e->getMessage());
+			ret_json( ['code' => '-404', 'msg' => $e->getMessage() ] );
 		}
 
 

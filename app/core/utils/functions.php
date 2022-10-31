@@ -23,10 +23,6 @@ function remove_last($s) {
 	return substr($s, 0, strlen($s)-1) ;
 }
 
-function checkRoute($route, $i, $url) {
-	return isset($route[$i]) && $route[$i] == $url;
-}
-
 // function utf8_transform($e) {
 // 	if(is_array($e)) {
 // 		foreach($e as $k=>$v) {
@@ -41,28 +37,7 @@ function checkRoute($route, $i, $url) {
 
 function ret_json($res) {
 	header('Content-Type: application/json; charset=utf-8');
-	// echo json_encode( utf8_transform($res)  );
 	echo json_encode( $res , JSON_UNESCAPED_UNICODE  );
-}
-
-function json_succ($d, $code = 1) {
-	$d['code'] = $code;
-	ret_json( $d );
-}
-
-function ret_not_found($msg = '', $code = -404) {
-	if($msg == '') $msg = 'Nie znaleziono zasobu';
-	return  array( 'code'=> $code, 'msg'=>$msg );
-}
-
-function ret_err($msg = '', $code = -1) {
-	if($msg == '') $msg = 'Wystąpił błąd';
-	return  array( 'code'=> $code, 'msg'=>$msg ) ;
-}
-
-function route_not_found($r = '[Nie podano]') {
-	$msg = 'Nie znaleziono routingu dla: ' . $r ;
-	return array( 'code'=>-404, 'msg'=>$msg ) ;
 }
 
 function getParam($name, $def='') {
@@ -93,10 +68,12 @@ function validateEmail($email) {
 	return preg_match('/^[\w_\.]+@[\w]+\.[a-zA-Z]+$/', $email);
 }
 
+//nie powinno byc tutaj tylko w modelu session
 function encode_pass($s) {
 	return sha1( $s . Constants::$seed );
 }
 
+//nie powinno byc tutaj tylko w modelu session
 function create_token($iduser) {
 	//zabezpieczenie przed wygenerowaniem dwa razy tego samego tokenu - iduser zabezpiecza - bez tego, jesli kilku uzytkownikow logowaloby sie w tej samej sekundzie to otrzymaliby te same tokeny! ale id user zabezpiecza - bo ten sam uzytkownik moze byc zalogowany tylko raz, wiec na pewno bedzie mial rozny token
 	return sha1(  time() . Constants::$seed . date('Y-m-d h:i:s') . $iduser);

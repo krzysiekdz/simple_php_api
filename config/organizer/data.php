@@ -12,7 +12,7 @@ class Config {
 		'port' => 3306
 	);
 
-	public static $seed = '1234';
+	public static $seed = '1234;
 
 }
 

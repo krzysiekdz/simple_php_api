@@ -2,6 +2,8 @@
 
 namespace Okdev;
 
+
+//https://okdev.hmcloud.pl/buses/home/news/list?debug=999&id=1
 class BusTest {
 
 	protected $db = null;
@@ -11,7 +13,27 @@ class BusTest {
 		$t = new BusTest($db);
 
 		// $t->test_session();
-		$t->test_users();
+		// $t->test_users();
+		$t->test_home_news();
+
+		echo '<h3>Logs:</h3>';
+		$db->printLogsHtml();
+	}
+
+
+	public function test_home_news() {
+		echo '<h3>HOME NEWS</h3>';
+		
+		echo 'NEWS LIST:';
+		$iter = HomeNews::getIterator( $this->db );
+		$items = $iter->list();
+		$iter->printItemsHtml( $items );
+		echo '<br>';
+
+		$news = create(new HomeNews($this->db))->get(3);
+		echo 'GET id = 3:';
+		echo '<br>';
+		print_r( $news->getModel() );		
 	}
 
 	public function test_session() {
@@ -104,6 +126,14 @@ class BusTest {
 		echo '<br>after update:<br>';
 		$u6 = create(new User($this->db))->get( $u5->id );
 		print_r( $u6->getModel() );
+		echo '<br>';
+		echo '<br>';
+
+		echo 'USERS LIST:';
+		echo '<br>';
+		$iter = User::getIterator( $this->db );
+		$ulist = $iter->list();
+		$iter->printItemsHtml( $ulist );
 		echo '<br>';
 		echo '<br>';
 
